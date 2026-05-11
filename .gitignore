@@ -8,3 +8,5 @@ data/
 .DS_Store
 __pycache__/
 *.pyc
+chroma_db/
+md5_db/
