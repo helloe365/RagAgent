@@ -15,10 +15,11 @@ import os
 
 class VectorStoreService:
     def __init__(self):
+        persist_directory = get_abs_path(chroma_conf["persist_directory"])
         self.vector_store = Chroma(
             collection_name=chroma_conf["collection_name"],
             embedding_function=embed_model,
-            persist_directory=chroma_conf["persist_directory"],
+            persist_directory=persist_directory,
         )
 
         self.spliter = RecursiveCharacterTextSplitter(
