@@ -1,3 +1,5 @@
+from asyncio import sleep
+
 import streamlit as st
 from agent.react_agent import ReactAgent
 
@@ -30,6 +32,7 @@ if prompt:
             for chunk in generator:
                 cache_list.append(chunk)
                 for char in chunk:
+                    sleep(0.01)  # 模拟打字效果
                     yield char
 
         st.chat_message("assistant").write_stream(capture(res_stream, response_messages))
