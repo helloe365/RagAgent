@@ -1,0 +1,2 @@
+external_data_path: data/external/records.csv
+chunk_size: 4096

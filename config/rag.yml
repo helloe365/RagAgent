@@ -1,0 +1,6 @@
+embedding_model_name: openai/text-embedding-3-small
+chat_model_name: "[渠道2]deepseek-ai/deepseek-v4-flash"
+base_url_embed: https://models.github.ai/inference
+base_url_chat: https://newapi.nki.pw/v1/
+api_key_embed: ${GITHUB_API_KEY}
+api_key_chat: ${CAT_API_KEY}
