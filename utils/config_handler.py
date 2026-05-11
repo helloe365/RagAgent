@@ -22,22 +22,22 @@ def _expand_env_vars(value):
 
 def load_rag_config(config_path: str = get_abs_path("config/rag.yml"), encoding: str = "utf-8"):
     with open(config_path, "r", encoding=encoding) as f:
-        return _expand_env_vars(yaml.load(f, Loader=yaml.FullLoader))
+        return _expand_env_vars(yaml.safe_load(f) or {})
 
 
 def load_chroma_config(config_path: str = get_abs_path("config/chroma.yml"), encoding: str = "utf-8"):
     with open(config_path,'r',encoding=encoding) as f:
-        return _expand_env_vars(yaml.load(f,Loader=yaml.FullLoader))
+        return _expand_env_vars(yaml.safe_load(f) or {})
 
 
 def load_prompts_config(config_path: str = get_abs_path("config/prompts.yml"), encoding: str = "utf-8"):
     with open(config_path,'r',encoding=encoding) as f:
-        return _expand_env_vars(yaml.load(f,Loader=yaml.FullLoader))
+        return _expand_env_vars(yaml.safe_load(f) or {})
 
 
 def load_agent_config(config_path: str = get_abs_path("config/agent.yml"), encoding: str = "utf-8"):
     with open(config_path,'r',encoding=encoding) as f:
-        return _expand_env_vars(yaml.load(f,Loader=yaml.FullLoader))
+        return _expand_env_vars(yaml.safe_load(f) or {})
 
 
 rag_conf = load_rag_config()

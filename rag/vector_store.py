@@ -3,7 +3,7 @@ import sqlite3
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from utils.config_handler import chroma_conf
-from model.factory import embed_model
+from model.factory import get_embed_model
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from utils.path_tool import get_abs_path
 from utils.file_handler import pdf_loader, txt_loader, listdir_with_allowed_type, get_file_md5_hex
@@ -18,7 +18,7 @@ class VectorStoreService:
         persist_directory = get_abs_path(chroma_conf["persist_directory"])
         self.vector_store = Chroma(
             collection_name=chroma_conf["collection_name"],
-            embedding_function=embed_model,
+            embedding_function=get_embed_model(),
             persist_directory=persist_directory,
         )
 
@@ -82,7 +82,7 @@ class VectorStoreService:
                     return row is not None
             except sqlite3.Error:
                 logger.error("Failed to check MD5 hex in database", exc_info=True)
-                return False
+                raise
 
         def save_md5_hex(md5_for_check: str):
             """将传入的md5字符串记录到SQLite数据库"""
@@ -102,6 +102,7 @@ class VectorStoreService:
                     conn.commit()
             except sqlite3.Error:
                 logger.error("Failed to save MD5 hex to database", exc_info=True)
+                raise
 
         def get_file_documents(read_path: str):
             if read_path.endswith(".txt"):
@@ -123,10 +124,11 @@ class VectorStoreService:
             if not md5_hex:
                 logger.error(f"[加载知识库]{path} md5计算失败，跳过")
                 continue
-            if check_md5_hex(md5_hex):
-                logger.info(f"[加载知识库]{path}内容已经存在知识库内，跳过")
-                continue
             try:
+                if check_md5_hex(md5_hex):
+                    logger.info(f"[加载知识库]{path}内容已经存在知识库内，跳过")
+                    continue
+
                 documents: list[Document] = get_file_documents(path)
 
                 if not documents:

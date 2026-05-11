@@ -43,5 +43,19 @@ class EmbeddingsFactory(BaseModelFactory):
             api_key=_resolve_api_key(rag_conf["api_key_embed"]),
         )
 
-chat_model = ChatModelFactory().generator()
-embed_model = EmbeddingsFactory().generator()
+_chat_model: BaseChatOpenAI | None = None
+_embed_model: Embeddings | None = None
+
+
+def get_chat_model() -> BaseChatOpenAI:
+    global _chat_model
+    if _chat_model is None:
+        _chat_model = ChatModelFactory().generator()
+    return _chat_model
+
+
+def get_embed_model() -> Embeddings:
+    global _embed_model
+    if _embed_model is None:
+        _embed_model = EmbeddingsFactory().generator()
+    return _embed_model

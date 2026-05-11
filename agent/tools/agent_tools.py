@@ -11,7 +11,7 @@ from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
 from langchain_core.tools import tool
 
-rag = RagSummarizeService()
+rag: RagSummarizeService | None = None
 
 user_ids = ["1001", "1002", "1003", "1004", "1005", "1006", "1007", "1008", "1009", "1010",]
 month_arr = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06",
@@ -116,6 +116,9 @@ def get_weather(city: str) -> str:
 
 @tool(description="从向量存储中检索参考资料")
 def rag_summarize(query: str) -> str:
+    global rag
+    if rag is None:
+        rag = RagSummarizeService()
     return rag.rag_summarize(query)
 
 @tool(description="获取用户所在城市的名称，以纯字符串形式返回")
@@ -189,7 +192,7 @@ def fetch_external_data(user_id: str, month: str) -> str:
     generate_external_data()
 
     try:
-        return external_data[user_id][month]
+        return json.dumps(external_data[user_id][month], ensure_ascii=False)
     except KeyError:
         logger.warning(f"[fetch_external_data]未能检索到用户：{user_id}在{month}的使用记录数据")
         return ""
