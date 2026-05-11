@@ -38,6 +38,15 @@ def _next_assistant_delta(current_text: str, previous_text: str) -> str:
     return current_text
 
 
+def _message_stage(latest_message: object) -> str | None:
+    if getattr(latest_message, "type", "") != "ai":
+        return None
+    tool_calls = getattr(latest_message, "tool_calls", None)
+    if tool_calls:
+        return "thought"
+    return "result"
+
+
 class ReactAgent:
     def __init__(self):
         self.agent = create_agent(
@@ -62,26 +71,32 @@ class ReactAgent:
             ]
         }
 
-        assistant_text = ""
+        thought_text = ""
+        result_text = ""
         # 第三个参数context就是上下文runtime中的信息，就是我们做提示词切换的标记
         for chunk in self.agent.stream(input_dict, stream_mode="values", context={"report": False}):
             messages = chunk.get("messages", [])
             if not messages:
                 continue
             latest_message = messages[-1]
-            if getattr(latest_message, "type", "") != "ai":
+            stage = _message_stage(latest_message)
+            if stage is None:
                 continue
             current_text = _content_to_text(getattr(latest_message, "content", "")).strip()
-            delta = _next_assistant_delta(current_text=current_text, previous_text=assistant_text)
+            previous_text = thought_text if stage == "thought" else result_text
+            delta = _next_assistant_delta(current_text=current_text, previous_text=previous_text)
             if not delta:
                 continue
-            assistant_text = current_text
-            yield delta
+            if stage == "thought":
+                thought_text = current_text
+            else:
+                result_text = current_text
+            yield stage, delta
 
 
 if __name__ == "__main__":
     agent = ReactAgent()
 
-    # for chunk in agent.execute_stream("给我生成我的使用报告"):
-    for chunk in agent.execute_stream("扫地机器人在我所在的地区的气温下如何保养"):
+    for chunk in agent.execute_stream("给我生成我的使用报告"):
+    # for _, chunk in agent.execute_stream("扫地机器人在我所在的地区的气温下如何保养"):
         print(chunk, end="", flush=True)
