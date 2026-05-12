@@ -3,6 +3,7 @@ import os
 import random
 import urllib.error
 import urllib.request
+from threading import Lock
 from urllib.parse import quote
 
 from rag.rag_service import RagSummarizeService
@@ -12,6 +13,7 @@ from utils.path_tool import get_abs_path
 from langchain_core.tools import tool
 
 rag: RagSummarizeService | None = None
+rag_init_lock = Lock()
 
 user_ids = ["1001", "1002", "1003", "1004", "1005", "1006", "1007", "1008", "1009", "1010",]
 month_arr = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06",
@@ -118,7 +120,9 @@ def get_weather(city: str) -> str:
 def rag_summarize(query: str) -> str:
     global rag
     if rag is None:
-        rag = RagSummarizeService()
+        with rag_init_lock:
+            if rag is None:
+                rag = RagSummarizeService()
     return rag.rag_summarize(query)
 
 @tool(description="获取用户所在城市的名称，以纯字符串形式返回")
