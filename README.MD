@@ -44,10 +44,10 @@ RagAgentProject/
 
 ### 2. 安装依赖
 
-项目当前未提供 `requirements.txt`，可先安装以下核心依赖：
+项目当前未提供 `requirements.txt`，可先安装以下核心依赖（如环境使用 SOCKS 代理，请确保安装 `httpx[socks]`）：
 
 ```bash
-pip install streamlit pyyaml pydantic langchain langgraph langchain-openai langchain-chroma chromadb langchain-community langchain-text-splitters pypdf
+pip install streamlit pyyaml pydantic langchain langgraph langchain-openai langchain-chroma chromadb langchain-community langchain-text-splitters pypdf httpx[socks]
 ```
 
 ### 3. 配置环境变量（Windows PowerShell）
