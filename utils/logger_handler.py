@@ -12,7 +12,7 @@ os.makedirs(LOG_ROOT,exist_ok=True)
 
 def get_logger(
         name: str = "agent",
-        console_leverr: int = logging.INFO,
+        console_level: int = logging.INFO,
         file_level: int = logging.DEBUG
 ,       log_file = None,
 ) -> logging.Logger:
@@ -30,7 +30,7 @@ def get_logger(
 
     # 控制台Handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(console_leverr)
+    console_handler.setLevel(console_level)
     console_handler.setFormatter(DEFAULT_LOG_FORMAT)
 
     logger.addHandler(console_handler)

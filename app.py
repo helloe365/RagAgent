@@ -37,7 +37,7 @@ if prompt:
         result_text = ""
 
         with st.chat_message("assistant"):
-            thought_expander = st.expander("思考中（点击查看详情）", expanded=False)
+            thought_expander = st.expander("思考中。。。（点击查看详情）", expanded=False)
             thought_placeholder = thought_expander.empty()
             result_placeholder = st.empty()
 
