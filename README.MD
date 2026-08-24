@@ -8,7 +8,7 @@
 - **ReAct 工具调用**：Agent 可按需调用天气、用户信息、外部记录等工具
 - **动态提示词切换**：普通咨询与“报告生成”场景自动切换系统提示词
 - **流式输出体验**：前端展示“思考中 + 最终回答”的流式交互
-- **知识库去重**：通过文件 MD5 + SQLite 记录，避免重复入库
+- **可靠知识库索引**：通过每个源文件的内容版本和 SQLite 清单实现幂等更新与失败恢复
 
 ## 技术栈
 
@@ -17,7 +17,7 @@
 - LangChain / LangGraph
 - Chroma（向量数据库）
 - OpenAI 兼容接口模型（Embedding + Chat）
-- SQLite（MD5 去重记录）
+- SQLite（源文件索引清单）
 
 ## 目录结构
 
@@ -31,7 +31,7 @@ RagAgentProject/
 ├─ prompts/                    # 系统提示词 / RAG提示词 / 报告提示词
 ├─ data/                       # 知识文档与外部记录
 ├─ chroma_db/                  # Chroma 持久化目录
-├─ md5_db/                     # 文件MD5去重数据库目录
+├─ md5_db/                     # 知识库源文件索引清单
 ├─ logs/                       # 日志目录
 └─ tests/                      # 单元测试
 ```
@@ -44,10 +44,16 @@ RagAgentProject/
 
 ### 2. 安装依赖
 
-项目当前未提供 `requirements.txt`，可先安装以下核心依赖（如环境使用 SOCKS 代理，请确保安装 `httpx[socks]`）：
+使用已解析的依赖锁文件安装：
 
 ```bash
-pip install streamlit pyyaml pydantic langchain langgraph langchain-openai langchain-chroma chromadb langchain-community langchain-text-splitters pypdf httpx[socks]
+python -m pip install -r requirements.lock
+```
+
+也可用 [uv](https://docs.astral.sh/uv/) 创建项目环境：
+
+```bash
+uv sync --extra test
 ```
 
 ### 3. 配置环境变量（Windows PowerShell）
@@ -55,13 +61,13 @@ pip install streamlit pyyaml pydantic langchain langgraph langchain-openai langc
 `config/rag.yml` 中默认使用了环境变量：
 
 - `GITHUB_API_KEY`（Embedding）
-- `CAT_API_KEY`（Chat）
+- `GLM_API_KEY`（Chat）
 
 在 PowerShell 中设置：
 
 ```powershell
 $env:GITHUB_API_KEY="你的Key"
-$env:CAT_API_KEY="你的Key"
+$env:GLM_API_KEY="你的Key"
 ```
 
 ### 4. 准备知识库（首次或文档更新后执行）
@@ -79,7 +85,7 @@ streamlit run app.py
 ### 6. 运行测试
 
 ```bash
-python -m unittest tests\test_stream_and_context.py
+python -m unittest discover -s tests -v
 ```
 
 ## 功能说明
@@ -87,3 +93,5 @@ python -m unittest tests\test_stream_and_context.py
 1. **智能问答**：通过 `rag_summarize` 从向量库检索扫地机器人相关知识并回答用户问题。
 2. **天气辅助建议**：通过 `get_weather` 获取实时天气，辅助保养建议。
 3. **用户报告生成**：按固定流程调用工具（用户ID、月份、外部记录、上下文注入）生成个性化使用报告。
+4. **会话上下文**：界面在每轮调用时传入此前完成的用户与助手消息；可使用“清空对话”开始新会话。
+5. **索引更新**：同一文件内容不会重复入库；内容更新会先写入新分块，再清理旧分块。删除源文件不会自动删除既有索引。

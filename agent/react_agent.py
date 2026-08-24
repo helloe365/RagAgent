@@ -14,6 +14,34 @@ from model.factory import get_chat_model
 from utils.prompt_loader import load_system_prompts
 
 
+def normalize_history(
+    history: list[dict] | None, max_messages: int = 20, max_chars: int = 8000
+) -> list[dict[str, str]]:
+    valid_messages: list[dict[str, str]] = []
+    for message in history or []:
+        if not isinstance(message, dict):
+            continue
+        role = message.get("role")
+        content = message.get("content")
+        if role not in {"user", "assistant"} or not isinstance(content, str) or not content.strip():
+            continue
+        valid_messages.append({"role": role, "content": content})
+
+    if max_messages <= 0 or max_chars <= 0:
+        return []
+
+    recent_messages = valid_messages[-max_messages:]
+    retained_reversed: list[dict[str, str]] = []
+    total_chars = 0
+    for message in reversed(recent_messages):
+        message_chars = len(message["content"])
+        if total_chars + message_chars > max_chars:
+            break
+        retained_reversed.append(message)
+        total_chars += message_chars
+    return list(reversed(retained_reversed))
+
+
 def _content_to_text(content: object) -> str:
     if isinstance(content, str):
         return content
@@ -64,11 +92,9 @@ class ReactAgent:
             middleware=[monitor_tool, log_before_model, report_prompt_switch],
         )
 
-    def execute_stream(self, query: str):
+    def execute_stream(self, query: str, history: list[dict] | None = None):
         input_dict = {
-            "messages": [
-                {"role": "user", "content": query},
-            ]
+            "messages": normalize_history(history) + [{"role": "user", "content": query}]
         }
 
         thought_text = ""

@@ -22,7 +22,7 @@ def _resolve_api_key(api_key:str) -> SecretStr:
         api_key = os.environ.get(env_name, "")
 
     if not api_key:
-        raise ValueError("请先配置有效的 API Key，例如设置 GITHUB_API_KEY 环境变量")
+        raise ValueError("请先为配置中引用的环境变量设置有效的 API Key（聊天模型默认使用 GLM_API_KEY）")
 
     return SecretStr(api_key)
 

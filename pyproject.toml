@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ragagent-project"
+version = "0.1.0"
+description = "A Streamlit LangChain RAG customer-service learning project"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=1.3.15",
+    "langchain-chroma>=1.1.0",
+    "langchain-community>=0.4.1",
+    "langchain-openai>=1.1.12",
+    "langchain-text-splitters>=1.1.1",
+    "pydantic>=2.12.5",
+    "pypdf>=6.16.0",
+    "PyYAML>=6.0.3",
+    "streamlit>=1.58.0",
+]
+
+[project.optional-dependencies]
+test = []
+
+[tool.setuptools]
+packages = ["agent", "agent.tools", "config", "model", "prompts", "rag", "utils"]

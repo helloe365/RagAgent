@@ -20,6 +20,9 @@ if st.session_state.get("agent") is None:
     st.error(f"智能客服初始化失败：{st.session_state.get('agent_error', '未知错误')}")
     st.stop()
 
+if st.button("清空对话"):
+    st.session_state["message"] = []
+    st.rerun()
 
 for message in st.session_state["message"]:
     st.chat_message(message["role"]).write(message["content"])
@@ -28,11 +31,12 @@ for message in st.session_state["message"]:
 prompt = st.chat_input()
 
 if prompt:
+    history = list(st.session_state["message"])
     st.chat_message("user").write(prompt)
     st.session_state["message"].append({"role": "user", "content": prompt})
 
     with st.spinner("智能客服思考中..."):
-        res_stream = st.session_state["agent"].execute_stream(prompt)
+        res_stream = st.session_state["agent"].execute_stream(prompt, history=history)
         thought_text = ""
         result_text = ""
 
@@ -52,7 +56,6 @@ if prompt:
         assistant_response = result_text.strip()
         st.session_state["message"].append({"role": "assistant", "content": assistant_response})
         st.rerun()
-
 
 
 

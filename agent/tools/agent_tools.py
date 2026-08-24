@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import random
@@ -140,55 +141,41 @@ def get_current_month() -> str:
     return random.choice(month_arr)
 
 
-def generate_external_data():
-    """
-    {
-        "user_id": {
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            ...
-        },
-        "user_id": {
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            ...
-        },
-        "user_id": {
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            "month" : {"特征": xxx, "效率": xxx, ...}
-            ...
-        },
-        ...
-    }
-    """
-    if not external_data:
-        external_data_path = get_abs_path(agent_conf["external_data_path"])
+def parse_external_records(path: str) -> dict[str, dict[str, dict[str, str]]]:
+    source_name = os.path.basename(path)
+    expected_header = ["用户ID", "特征", "清洁效率", "耗材", "对比", "时间"]
+    parsed_records: dict[str, dict[str, dict[str, str]]] = {}
 
-        if not os.path.exists(external_data_path):
-            raise FileNotFoundError(f'外部数据文件不存在，请确保路径正确: {external_data_path}')
-
-        with open(external_data_path,'r',encoding='utf-8') as f:
-            for line in f.readlines()[1:]:
-                arr: list[str] = line.strip().split(',')
-                user_id: str = arr[0].replace('"', '') #把 " 替换为空字符串
-                feature: str = arr[1].replace('"', '')
-                efficiency: str = arr[2].replace('"', '')
-                consumables: str = arr[3].replace('"', '')
-                comparision: str = arr[4].replace('"', '')
-                time: str = arr[5].replace('"', '')
-
-                if user_id not in external_data:
-                    external_data[user_id] = {}
-
-                external_data[user_id][time]={
+    try:
+        with open(path, "r", newline="", encoding="utf-8-sig") as file:
+            reader = csv.reader(file, strict=True)
+            header = next(reader, None)
+            if header != expected_header:
+                raise ValueError(f"CSV header error in {source_name} line 1")
+            for row in reader:
+                if len(row) != 6:
+                    raise ValueError(
+                        f"CSV record error in {source_name} line {reader.line_num}: expected 6 columns"
+                    )
+                user_id, feature, efficiency, consumables, comparison, month = row
+                parsed_records.setdefault(user_id, {})[month] = {
                     "特征": feature,
                     "效率": efficiency,
                     "消耗品": consumables,
-                    "对比": comparision,
+                    "对比": comparison,
                 }
+    except csv.Error as exc:
+        raise ValueError(f"CSV parse error in {source_name} line {reader.line_num}: {exc}") from exc
+
+    return parsed_records
+
+
+def generate_external_data():
+    global external_data
+    external_data_path = get_abs_path(agent_conf["external_data_path"])
+    if not os.path.exists(external_data_path):
+        raise FileNotFoundError(f"外部数据文件不存在，请确保路径正确: {external_data_path}")
+    external_data = parse_external_records(external_data_path)
 
 
 @tool(description="从外部系统中获取指定用户在指定月份的使用记录，以纯字符串形式返回， 如果未检索到返回空字符串")
